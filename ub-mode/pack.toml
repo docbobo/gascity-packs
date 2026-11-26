@@ -1,0 +1,8 @@
+[pack]
+name = "ub-mode"
+schema = 2
+version = "0.1.0"
+description = "Uncle Bob's ub-mode discipline: skill, quality-gate tools, and a build formula that applies them to design and implementation."
+
+[imports.gc]
+source = "https://github.com/gastownhall/gascity-packs/tree/main/gascity"

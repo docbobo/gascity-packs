@@ -1,0 +1,1 @@
+description = "Install unclebob/mutator (mutation coverage gate) under ~/.gc/cache/ub-mode and link ~/.gc/cache/bin/mutator."
