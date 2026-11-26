@@ -98,6 +98,15 @@ for path in formulas:
         target = (path.parent / ref).resolve()
         if not target.is_file():
             fail(f"{rel} step {step.get('id')!r} description_file {ref} does not exist")
+    for step in doc.get("steps") or []:
+        check_path = ((step.get("check") or {}).get("check") or {}).get("path")
+        if not check_path:
+            continue
+        # Layer-relative ../assets paths are resolved to the shipped script at
+        # parse time. A store-relative path such as .gc/scripts/... is never
+        # installed in a rig and stays unresolved, so dispatch cannot launch it.
+        if not check_path.startswith("../assets/") and not check_path.startswith("/"):
+            fail(f"{rel} step {step.get('id')!r} check path {check_path!r} is not layer-relative")
 
 for problem in problems:
     print(f"FAIL {problem}")
