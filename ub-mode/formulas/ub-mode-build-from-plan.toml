@@ -1,0 +1,67 @@
+description = "Default Gas City build continuation from an approved plan with Uncle Bob's ub-mode applied to planning and implementation."
+formula = "ub-mode-build-from-plan"
+version = 1
+extends = ["build-from-plan"]
+target_required = false
+
+[requires]
+formula_compiler = ">=2.0.0"
+
+[catalog]
+name = "ub-mode-build-from-plan"
+description = "Continue a build from approved requirements through planning, decomposition, implementation, review and optional publish, applying ub-mode discipline to the plan and implementation steps."
+
+[metadata.gc.methodology]
+allowed_drain_policies = ["separate", "same-session"]
+implementation_strategy = "drain"
+interaction_modes = ["interactive", "autonomous", "headless"]
+review_modes = ["report", "agent", "interactive"]
+
+[vars.ub_mode_formula]
+description = "This formula's id, recorded in the plan artifact front matter."
+default = "ub-mode-build-from-plan"
+
+[[steps]]
+id = "plan"
+title = "Write implementation plan"
+needs = ["prepare-plan"]
+metadata = { "gc.run_target" = "gc.design-author", "gc.build.artifact_schema" = "gc.build.plan.v1", "gc.build.artifact_path_keys" = "gc.build.plan_path,gc.var.plan_path" }
+description_file = "../assets/workflows/ub-mode-build/plan.md"
+
+[steps.check]
+max_attempts = 3
+
+[steps.check.check]
+mode = "exec"
+path = "../assets/scripts/checks/build-artifact-valid.sh"
+timeout = "5m"
+
+[[steps]]
+id = "implement"
+title = "Drain build implementation"
+needs = ["prepare-convoy"]
+condition = "{{drain_policy}} == separate"
+metadata = { "gc.run_target" = "{{implementation_target}}" }
+description_file = "../assets/workflows/ub-mode-build/implement.md"
+
+[steps.drain]
+context = "separate"
+formula = "do-work"
+member_access = "exclusive"
+
+[[steps]]
+id = "implement-same-session"
+title = "Drain build implementation in one shared session"
+needs = ["prepare-convoy"]
+condition = "{{drain_policy}} == same-session"
+metadata = { "gc.run_target" = "{{implementation_target}}" }
+description_file = "../assets/workflows/ub-mode-build/implement-same-session.md"
+
+[steps.drain]
+context = "shared"
+formula = "do-work-item"
+on_item_failure = "skip_remaining"
+member_access = "exclusive"
+
+[steps.drain.item]
+single_lane = true

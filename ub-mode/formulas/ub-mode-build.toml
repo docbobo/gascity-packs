@@ -18,6 +18,10 @@ implementation_strategy = "drain"
 interaction_modes = ["interactive", "autonomous", "headless"]
 review_modes = ["report", "agent", "interactive"]
 
+[vars.ub_mode_formula]
+description = "This formula's id, recorded in the plan artifact front matter."
+default = "ub-mode-build"
+
 [[steps]]
 id = "plan"
 title = "Write implementation plan"

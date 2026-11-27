@@ -1,31 +1,46 @@
 # ub-mode pack
 
 Uncle Bob's [ub-mode](https://github.com/unclebob/ub-mode) as a Gas City pack: the
-skill, the three quality gates it names, and a `build-basic` variant that applies
-ub-mode to design and implementation.
+skill, the three quality gates it names, and ub-mode variants of the user-facing
+`build-*` modes that apply ub-mode to design and implementation.
 
 ## What it contains
 
 | Piece | What it does |
 | --- | --- |
 | `skills/ub-mode/SKILL.md` | The reduced principles, vendored from upstream. Registers as `ub-mode`. |
-| `formulas/ub-mode-build.toml` | `build-basic` with its `plan`, `implement`, and `implement-same-session` steps replaced so they apply ub-mode. |
+| `formulas/ub-mode-build*.toml` | One variant per user-facing build mode (`build-basic`, `build-from-requirements`, `build-from-plan`, `build-from-decompose`, `build-from-convoy`) with its design and implementation steps replaced so they apply ub-mode. |
 | `assets/workflows/ub-mode-build/` | The replacement step prompts. |
 | `doctor/{crapper,dryer,mutator}/` | Install the Python gates at fixed paths and report them in `gc doctor`. |
 | `assets/scripts/install-ub-tool.sh` | Shared installer behind the three doctor checks. |
 
 ## Gating model
 
-`ub-mode-build` extends `build-basic` and overrides exactly three steps:
+The pack ships one variant per user-facing build mode. Each extends its matching
+`build-*` formula and overrides only the design and implementation steps:
+
+- `ub-mode-build` – extends `build-basic`; overrides `plan`, `implement`,
+  `implement-same-session`.
+- `ub-mode-build-from-requirements` – extends `build-from-requirements`; same
+  three overrides.
+- `ub-mode-build-from-plan` – extends `build-from-plan`; same three overrides.
+- `ub-mode-build-from-decompose` – extends `build-from-decompose`; overrides
+  `implement` and `implement-same-session` (no `plan` step).
+- `ub-mode-build-from-convoy` – extends `build-from-convoy`; overrides
+  `implement` and `implement-same-session` (no `plan` step).
+
+The overridden steps are:
 
 - `plan` – design under ub-mode (domain model, boundary, types, shared state,
   first principles, subtraction, TDD up front).
 - `implement` and `implement-same-session` – per-unit TDD plus the crapper, dryer
   and mutator gates.
 
-Every other step is inherited unchanged, so requirements, design review,
-decomposition, review, verify and publish behave like plain `build-basic`. Review
-steps do not mention ub-mode.
+The plan prompt records the variant's own formula id in the plan artifact front
+matter through the `ub_mode_formula` variable, so a plan written by
+`ub-mode-build-from-requirements` says so. Every other step is inherited
+unchanged, so requirements, design review, decomposition, review, verify and
+publish behave like the plain base mode. Review steps do not mention ub-mode.
 
 This is instruction gating, not isolation. Agents in the build are told to apply
 ub-mode and their prompts carry the rules; nothing stops another agent in the same
@@ -64,10 +79,15 @@ passed.
 Invocation is caller-selected, not a city default:
 
 ```sh
-gc sling gc.run-operator <bead-id> --on ub-mode-build
+gc sling gc.run-operator <bead-id> --on ub-mode-build                 # from scratch
+gc sling gc.run-operator <bead-id> --on ub-mode-build-from-requirements
+gc sling gc.run-operator <bead-id> --on ub-mode-build-from-plan
+gc sling gc.run-operator <bead-id> --on ub-mode-build-from-decompose
+gc sling gc.run-operator <bead-id> --on ub-mode-build-from-convoy
 ```
 
-The formula takes the standard `build-basic` variables (`artifact_root`,
+Pick the variant that matches your starting point; each continues from where its
+base mode starts. Every variant takes the standard base-mode variables (`artifact_root`,
 `drain_policy`, `implementation_target`, `interaction_mode`, `push`, `open_pr`,
 …). `drain_policy` is `separate` or `same-session`.
 
@@ -78,11 +98,11 @@ The formula takes the standard `build-basic` variables (`artifact_root`,
 ```
 
 Static checks: `pack.toml` parses, schema 2, imports the base pack; the skill
-declares `name: ub-mode` with a description; the formula extends `build-basic`,
-declares `[requires] formula_compiler`, has a catalog and methodology block, and
-overrides the three steps; every `description_file` exists; the MIT license keeps
-the upstream copyright line. When run inside a city that imports the pack it also
-compiles the formula with `gc formula show ub-mode-build`.
+declares `name: ub-mode` with a description; every formula extends a `build-*`
+mode, declares `[requires] formula_compiler`, has a catalog and methodology block,
+and overrides its design and implementation steps; every `description_file`
+exists; the MIT license keeps the upstream copyright line. When run inside a city
+that imports the pack it also compiles each formula with `gc formula show`.
 
 ## Provenance
 

@@ -45,12 +45,12 @@ The validator only recognizes a Markdown table with an `ID` column and a
 | REQ-001 | covered |
 
 Use mapping objects for front matter; do not use scalar shortcuts such as
-`workflow: ub-mode-build`. The top-level YAML shape must be:
+`workflow: {{ub_mode_formula}}`. The top-level YAML shape must be:
 
 - `schema: gc.build.plan.v1`
-- `workflow: {id: <workflow-root-id>, formula: ub-mode-build}`
-- `methodology: {pack: ub-mode, name: ub-mode-build}`
-- `producer: {formula: ub-mode-build, stage: plan, attempt: <positive integer>}`
+- `workflow: {id: <workflow-root-id>, formula: {{ub_mode_formula}}}`
+- `methodology: {pack: ub-mode, name: {{ub_mode_formula}}}`
+- `producer: {formula: {{ub_mode_formula}}, stage: plan, attempt: <positive integer>}`
 - `status: approved` or another schema-allowed status
 - `trace: {upstream: [...], coverage: [...]}`
 

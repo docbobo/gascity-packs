@@ -2,7 +2,7 @@
 # Static checks for the ub-mode pack. Run directly: ./tests/verify.sh
 #
 # Compiling the formula needs a city that imports the pack; that pass is the
-# separate `gc formula show ub-mode-build` listed in the README, and is run here
+# separate `gc formula show <formula>` listed in the README, and is run here
 # too when the current directory is inside a city that has the pack.
 
 set -eu
@@ -77,8 +77,10 @@ for path in formulas:
     rel = path.relative_to(pack)
     if not doc.get("formula"):
         fail(f"{rel} has no formula name")
-    if "build-basic" not in (doc.get("extends") or []):
-        fail(f"{rel} does not extend build-basic")
+    bases = doc.get("extends") or []
+    base = next((b for b in bases if b.startswith("build-")), None)
+    if base is None:
+        fail(f"{rel} does not extend a build-* formula")
     if "contract" in doc:
         fail(f"{rel} uses the deprecated contract key; declare [requires] formula_compiler")
     if not (doc.get("requires") or {}).get("formula_compiler"):
@@ -88,9 +90,16 @@ for path in formulas:
     if not (doc.get("metadata") or {}).get("gc", {}).get("methodology"):
         fail(f"{rel} has no [metadata.gc.methodology] block")
     steps = {s.get("id") for s in doc.get("steps") or []}
-    for want in ("plan", "implement", "implement-same-session"):
-        if want not in steps:
-            fail(f"{rel} does not override the {want!r} step")
+    want = ["implement", "implement-same-session"]
+    if base in ("build-basic", "build-from-requirements", "build-from-plan"):
+        want.append("plan")
+    for step_id in want:
+        if step_id not in steps:
+            fail(f"{rel} does not override the {step_id!r} step")
+    if "plan" in steps:
+        declared_var = (doc.get("vars") or {}).get("ub_mode_formula", {})
+        if declared_var.get("default") != doc.get("formula"):
+            fail(f"{rel} plan step requires [vars.ub_mode_formula] default {doc.get('formula')!r}, got {declared_var.get('default')!r}")
     for step in doc.get("steps") or []:
         ref = step.get("description_file")
         if not ref:
@@ -116,9 +125,15 @@ EOF
 if [ "$fail" -eq 0 ]; then ok "pack.toml, skills, formulas and description files"; fi
 
 if command -v gc >/dev/null 2>&1 && gc formula show ub-mode-build >/dev/null 2>&1; then
-  ok "gc formula show ub-mode-build compiles"
+  for f in ub-mode-build ub-mode-build-from-requirements ub-mode-build-from-plan ub-mode-build-from-decompose ub-mode-build-from-convoy; do
+    if gc formula show "$f" >/dev/null 2>&1; then
+      ok "gc formula show $f compiles"
+    else
+      bad "gc formula show $f fails to compile"
+    fi
+  done
 else
-  say "skip gc formula show ub-mode-build (no city here imports the pack)"
+  say "skip gc formula show (no city here imports the pack)"
 fi
 
 if [ "$fail" -ne 0 ]; then

@@ -10,6 +10,18 @@ Ship a reusable pack that (a) vendors the ub-mode skill, (b) binds it to design 
 
 The pack lives in the already-created multi-pack repo `docbobo-gascity-packs`, in the `ub-mode/` pack directory.
 
+## Update: scope expanded to the whole user-facing build family
+
+The first cut shipped only `ub-mode-build` (extends `build-basic`). The pack now
+ships one variant per user-facing build mode: `ub-mode-build` (from scratch),
+`ub-mode-build-from-requirements`, `ub-mode-build-from-plan`,
+`ub-mode-build-from-decompose` and `ub-mode-build-from-convoy`. Each extends its
+matching `build-*` base and overrides the `plan` step (when the base has one) plus
+`implement` and `implement-same-session`. The variant id is threaded into the plan
+artifact front matter through the `ub_mode_formula` variable. Everything else in
+this plan still holds; the decisions below describe the single `build-basic` case
+and read as the first variant of the family.
+
 ## Decisions to make (with recommendations)
 
 **1. Pack shape.** Methodology pack. [decided]
